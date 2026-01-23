@@ -4,3 +4,7 @@ python-dotenv
 retry
 openpyxl
 pycryptodome
+
+fastapi
+uvicorn
+gradio

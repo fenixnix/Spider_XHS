@@ -139,97 +139,111 @@ with gr.Blocks(title="小红书爬虫API", theme=gr.themes.Soft()) as app:
     
     # Cookie管理标签页
     with gr.Tab("Cookie管理"):
-        gr.Markdown("#### 设置Cookie")
-        with gr.Row():
-            cookie_input = gr.Textbox(label="小红书Cookie", placeholder="请输入完整的小红书Cookie", lines=3)
-            cookie_key_input = gr.Textbox(label="Cookie标识", value="default", placeholder="默认为default")
-        set_cookie_btn = gr.Button("设置Cookie")
-        set_cookie_output = gr.Textbox(label="设置结果", lines=2)
-        
-        gr.Markdown("#### 获取Cookie")
-        with gr.Row():
-            get_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-            get_cookie_btn = gr.Button("获取Cookie")
-        get_cookie_output = gr.Textbox(label="获取结果", lines=3)
-        
-        gr.Markdown("#### 删除Cookie")
-        with gr.Row():
-            delete_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-            delete_cookie_btn = gr.Button("删除Cookie")
-        delete_cookie_output = gr.Textbox(label="删除结果", lines=2)
+        # 使用嵌套标签页（pages）排列不同的Cookie管理功能
+        with gr.Tabs():
+            # 设置Cookie
+            with gr.Tab("设置Cookie"):
+                gr.Markdown("#### 设置Cookie")
+                with gr.Row():
+                    cookie_input = gr.Textbox(label="小红书Cookie", placeholder="请输入完整的小红书Cookie", lines=3)
+                    cookie_key_input = gr.Textbox(label="Cookie标识", value="default", placeholder="默认为default")
+                set_cookie_btn = gr.Button("设置Cookie")
+                set_cookie_output = gr.Textbox(label="设置结果", lines=2)
+            
+            # 获取Cookie
+            with gr.Tab("获取Cookie"):
+                gr.Markdown("#### 获取Cookie")
+                with gr.Row():
+                    get_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                    get_cookie_btn = gr.Button("获取Cookie")
+                get_cookie_output = gr.Textbox(label="获取结果", lines=3)
+            
+            # 删除Cookie
+            with gr.Tab("删除Cookie"):
+                gr.Markdown("#### 删除Cookie")
+                with gr.Row():
+                    delete_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                    delete_cookie_btn = gr.Button("删除Cookie")
+                delete_cookie_output = gr.Textbox(label="删除结果", lines=2)
     
     # 爬虫功能标签页
     with gr.Tab("爬虫功能"):
-        # 爬取单个笔记
-        gr.Markdown("#### 爬取单个笔记")
-        with gr.Row():
-            single_note_url = gr.Textbox(label="笔记链接", placeholder="请输入小红书笔记链接")
-            single_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-        single_note_btn = gr.Button("爬取单个笔记")
-        single_note_output = gr.Textbox(label="爬取结果", lines=5)
-        
-        # 爬取多个笔记
-        gr.Markdown("#### 爬取多个笔记")
-        batch_notes_text = gr.Textbox(label="笔记链接列表", placeholder="每行一个笔记链接", lines=5)
-        with gr.Row():
-            batch_save_choice = gr.Dropdown(
-                choices=["all", "media", "excel"], 
-                label="保存选项", 
-                value="all",
-                info="all: 保存所有信息, media: 保存媒体文件, excel: 保存到Excel"
-            )
-            batch_excel_name = gr.Textbox(label="Excel文件名", value="batch_notes", placeholder="保存到Excel时的文件名")
-            batch_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-        batch_notes_btn = gr.Button("批量爬取笔记")
-        batch_notes_output = gr.Textbox(label="爬取结果", lines=5)
-        
-        # 爬取用户所有笔记
-        gr.Markdown("#### 爬取用户所有笔记")
-        with gr.Row():
-            user_url = gr.Textbox(label="用户主页链接", placeholder="请输入小红书用户主页链接")
-            user_save_choice = gr.Dropdown(
-                choices=["all", "media", "excel"], 
-                label="保存选项", 
-                value="all"
-            )
-        with gr.Row():
-            user_excel_name = gr.Textbox(label="Excel文件名", placeholder="可选，默认为用户ID")
-            user_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-        user_notes_btn = gr.Button("爬取用户所有笔记")
-        user_notes_output = gr.Textbox(label="爬取结果", lines=5)
-        
-        # 搜索笔记
-        gr.Markdown("#### 搜索笔记")
-        with gr.Row():
-            search_query = gr.Textbox(label="搜索关键词", placeholder="请输入搜索关键词")
-            search_num = gr.Number(label="搜索数量", value=10, minimum=1, maximum=100)
-        with gr.Row():
-            search_save_choice = gr.Dropdown(
-                choices=["all", "media", "excel"], 
-                label="保存选项", 
-                value="all"
-            )
-            search_excel_name = gr.Textbox(label="Excel文件名", placeholder="可选，默认为搜索关键词")
-        with gr.Row():
-            search_sort = gr.Dropdown(
-                choices=[("综合排序", 0), ("最新", 1), ("最多点赞", 2), ("最多评论", 3), ("最多收藏", 4)],
-                label="排序方式",
-                value=0
-            )
-            search_note_type = gr.Dropdown(
-                choices=[("不限", 0), ("视频笔记", 1), ("普通笔记", 2)],
-                label="笔记类型",
-                value=0
-            )
-        with gr.Row():
-            search_note_time = gr.Dropdown(
-                choices=[("不限", 0), ("一天内", 1), ("一周内", 2), ("半年内", 3)],
-                label="笔记时间",
-                value=0
-            )
-            search_cookie_key = gr.Textbox(label="Cookie标识", value="default")
-        search_btn = gr.Button("搜索笔记")
-        search_output = gr.Textbox(label="搜索结果", lines=5)
+        # 使用嵌套标签页（pages）排列不同的爬虫功能
+        with gr.Tabs():
+            # 爬取单个笔记
+            with gr.Tab("爬取单个笔记"):
+                gr.Markdown("#### 爬取单个笔记")
+                with gr.Row():
+                    single_note_url = gr.Textbox(label="笔记链接", placeholder="请输入小红书笔记链接")
+                    single_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                single_note_btn = gr.Button("爬取单个笔记")
+                single_note_output = gr.Textbox(label="爬取结果", lines=5)
+            
+            # 爬取多个笔记
+            with gr.Tab("批量爬取笔记"):
+                gr.Markdown("#### 爬取多个笔记")
+                batch_notes_text = gr.Textbox(label="笔记链接列表", placeholder="每行一个笔记链接", lines=5)
+                with gr.Row():
+                    batch_save_choice = gr.Dropdown(
+                        choices=["all", "media", "excel"], 
+                        label="保存选项", 
+                        value="all",
+                        info="all: 保存所有信息, media: 保存媒体文件, excel: 保存到Excel"
+                    )
+                    batch_excel_name = gr.Textbox(label="Excel文件名", value="batch_notes", placeholder="保存到Excel时的文件名")
+                    batch_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                batch_notes_btn = gr.Button("批量爬取笔记")
+                batch_notes_output = gr.Textbox(label="爬取结果", lines=5)
+            
+            # 爬取用户所有笔记
+            with gr.Tab("爬取用户笔记"):
+                gr.Markdown("#### 爬取用户所有笔记")
+                with gr.Row():
+                    user_url = gr.Textbox(label="用户主页链接", placeholder="请输入小红书用户主页链接")
+                    user_save_choice = gr.Dropdown(
+                        choices=["all", "media", "excel"], 
+                        label="保存选项", 
+                        value="all"
+                    )
+                with gr.Row():
+                    user_excel_name = gr.Textbox(label="Excel文件名", placeholder="可选，默认为用户ID")
+                    user_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                user_notes_btn = gr.Button("爬取用户所有笔记")
+                user_notes_output = gr.Textbox(label="爬取结果", lines=5)
+            
+            # 搜索笔记
+            with gr.Tab("搜索笔记"):
+                gr.Markdown("#### 搜索笔记")
+                with gr.Row():
+                    search_query = gr.Textbox(label="搜索关键词", placeholder="请输入搜索关键词")
+                    search_num = gr.Number(label="搜索数量", value=10, minimum=1, maximum=100)
+                with gr.Row():
+                    search_save_choice = gr.Dropdown(
+                        choices=["all", "media", "excel"], 
+                        label="保存选项", 
+                        value="all"
+                    )
+                    search_excel_name = gr.Textbox(label="Excel文件名", placeholder="可选，默认为搜索关键词")
+                with gr.Row():
+                    search_sort = gr.Dropdown(
+                        choices=[("综合排序", 0), ("最新", 1), ("最多点赞", 2), ("最多评论", 3), ("最多收藏", 4)],
+                        label="排序方式",
+                        value=0
+                    )
+                    search_note_type = gr.Dropdown(
+                        choices=[("不限", 0), ("视频笔记", 1), ("普通笔记", 2)],
+                        label="笔记类型",
+                        value=0
+                    )
+                with gr.Row():
+                    search_note_time = gr.Dropdown(
+                        choices=[("不限", 0), ("一天内", 1), ("一周内", 2), ("半年内", 3)],
+                        label="笔记时间",
+                        value=0
+                    )
+                    search_cookie_key = gr.Textbox(label="Cookie标识", value="default")
+                search_btn = gr.Button("搜索笔记")
+                search_output = gr.Textbox(label="搜索结果", lines=5)
     
     # 数据访问标签页
     with gr.Tab("数据访问"):

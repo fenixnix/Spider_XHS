@@ -1,18 +1,11 @@
 import json
 import math
 import random
-import execjs
 from xhs_utils.cookie_util import trans_cookies
+from xhs_utils.xhs_signature import XHS_Signature
 
-try:
-    js = execjs.compile(open(r'../static/xhs_xs_xsc_56.js', 'r', encoding='utf-8').read())
-except:
-    js = execjs.compile(open(r'static/xhs_xs_xsc_56.js', 'r', encoding='utf-8').read())
-
-try:
-    xray_js = execjs.compile(open(r'../static/xhs_xray.js', 'r', encoding='utf-8').read())
-except:
-    xray_js = execjs.compile(open(r'static/xhs_xray.js', 'r', encoding='utf-8').read())
+# 初始化签名生成器
+signature_gen = XHS_Signature()
 
 def generate_x_b3_traceid(len=16):
     x_b3_traceid = ""
@@ -21,17 +14,20 @@ def generate_x_b3_traceid(len=16):
     return x_b3_traceid
 
 def generate_xs_xs_common(a1, api, data='', method='POST'):
-    ret = js.call('get_request_headers_params', api, data, a1, method)
+    ret = signature_gen.get_request_headers_params(api, data, a1, method)
     xs, xt, xs_common = ret['xs'], ret['xt'], ret['xs_common']
     return xs, xt, xs_common
 
 def generate_xs(a1, api, data=''):
-    ret = js.call('get_xs', api, data, a1)
-    xs, xt = ret['X-s'], ret['X-t']
+    # 使用新的签名生成器生成xs和xt
+    method = method or 'POST'  # 默认使用POST方法
+    ret = signature_gen.get_request_headers_params(api, data, a1, method)
+    xs, xt = ret['xs'], ret['xt']
     return xs, xt
 
 def generate_xray_traceid():
-    return xray_js.call('traceId')
+    # 生成一个简单的traceid，格式为32位十六进制字符串
+    return ''.join(["abcdef0123456789"[math.floor(16 * random.random())] for _ in range(32)])
 def get_common_headers():
     return {
         "authority": "www.xiaohongshu.com",
@@ -89,6 +85,8 @@ def generate_headers(a1, api, data='', method='POST'):
 
 def generate_request_params(cookies_str, api, data='', method='POST'):
     cookies = trans_cookies(cookies_str)
+    if 'a1' not in cookies:
+        raise ValueError("Cookie中缺少'a1'值，请确保COOKIES环境变量设置正确")
     a1 = cookies['a1']
     headers, data = generate_headers(a1, api, data, method)
     return headers, cookies, data

@@ -26,6 +26,8 @@ class XHS_Creator_Apis():
             splice_api = splice_str(api, params)
             headers = get_common_headers()
             cookies = trans_cookies(cookies_str)
+            if 'a1' not in cookies:
+                raise ValueError("Cookie中缺少'a1'值，请确保COOKIES环境变量设置正确")
             xs, xt, _ = generate_xs(cookies['a1'], splice_api, '')
             headers['x-s'], headers['x-t'] = xs, str(xt)
             response = requests.get(self.base_url + splice_api, headers=headers, cookies=cookies, verify=False)

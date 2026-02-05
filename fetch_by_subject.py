@@ -7,6 +7,7 @@ import re
 import sys
 import time
 from datetime import datetime
+from typing import Optional
 
 from loguru import logger
 
@@ -30,7 +31,7 @@ def random_sleep(min_sec: float = 2.0, max_sec: float = 5.0) -> None:
 def fetch_notes_by_subject(
     subtitle: str,
     quantity: int = 100,
-    output: str = None,
+    output: Optional[str] = None,
     sort: int = 0,
     note_type: int = 0,
     note_time: int = 0,
@@ -55,10 +56,15 @@ def fetch_notes_by_subject(
     xhs_apis = XHS_Apis()
 
     # 设置输出文件
+    safe_name = re.sub(r'[\\/:*?"<>|]', "_", subtitle)
     if not output:
-        safe_name = re.sub(r'[\\/:*?"<>|]', "_", subtitle)
         output = f"{safe_name}.jsonl"
     file_path = os.path.abspath(os.path.join(base_path["excel"], output))
+
+    # 评论文件
+    comments_file_path = os.path.abspath(
+        os.path.join(base_path["excel"], f"{safe_name}_comments.jsonl")
+    )
 
     page = 1
     total_count = 0
@@ -99,9 +105,56 @@ def fetch_notes_by_subject(
                 # 添加采集时间戳
                 note["crawl_time"] = datetime.now().isoformat()
 
+                # 保存笔记
                 with open(file_path, "a", encoding="utf-8") as f:
                     f.write(json.dumps(note, ensure_ascii=False) + "\n")
                 total_count += 1
+
+                # 获取并保存评论
+                note_id = note.get("id") or note.get("note_id")
+                xsec_token = note.get("xsec_token", "")
+                if note_id:
+                    random_sleep(1.0, 2.0)  # 获取评论前短暂休眠
+                    try:
+                        # 直接调用获取评论API
+                        success_c, msg_c, out_comments = (
+                            xhs_apis.get_note_all_out_comment(
+                                note_id, xsec_token, cookies_str, {}
+                            )
+                        )
+                        if success_c and out_comments:
+                            # 获取二级评论
+                            all_comments = []
+                            for comment in out_comments:
+                                all_comments.append(comment)
+                                # 获取二级评论
+                                if comment.get("sub_comment_has_more"):
+                                    success_sub, msg_sub, sub_comments = (
+                                        xhs_apis.get_note_all_inner_comment(
+                                            comment, xsec_token, cookies_str, {}
+                                        )
+                                    )
+                                    if success_sub and sub_comments:
+                                        all_comments.extend(sub_comments)
+
+                            # 保存评论，格式: {"note_id": <ID>, "comment": <数据>}
+                            comment_record = {
+                                "note_id": note_id,
+                                "crawl_time": datetime.now().isoformat(),
+                                "comment": all_comments,
+                            }
+                            with open(comments_file_path, "a", encoding="utf-8") as f:
+                                f.write(
+                                    json.dumps(comment_record, ensure_ascii=False)
+                                    + "\n"
+                                )
+                            logger.info(
+                                f"📝 笔记 {note_id}: 获取 {len(all_comments)} 条评论"
+                            )
+                        elif not success_c:
+                            logger.debug(f"笔记 {note_id}: 获取评论失败 ({msg_c})")
+                    except Exception as e:
+                        logger.debug(f"笔记 {note_id} 获取评论异常: {e}")
 
                 if total_count >= quantity:
                     break

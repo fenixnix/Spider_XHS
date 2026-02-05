@@ -6,7 +6,7 @@
 1. 读取评论JSONL文件（包含一级和二级评论）
 2. 提取所有评论的用户ID
 3. 去重并统计
-4. 保存为文本文件
+4. 保存为文本文件（包含用户主页链接）
 
 用法:
     python extract_commenters_from_comments.py <评论文件路径> [--output <输出文件>]
@@ -22,6 +22,8 @@ import os
 import sys
 from datetime import datetime
 from typing import Set, Dict, List, Tuple
+
+from xhs_utils.xhs_link_util import user_url
 
 
 def parse_comments_jsonl(file_path: str) -> Tuple[List[dict], int]:
@@ -83,6 +85,7 @@ def extract_commenter_ids(records: List[dict]) -> Tuple[Set[str], Dict[str, dict
                             "user_id": user_id,
                             "nickname": user.get("nickname", user.get("nick_name", "")),
                             "note_id": record.get("note_id", ""),
+                            "xsec_token": user.get("xsec_token", ""),
                         }
 
                 # 二级评论用户
@@ -99,22 +102,7 @@ def extract_commenter_ids(records: List[dict]) -> Tuple[Set[str], Dict[str, dict
                                     "nickname", sub_user.get("nick_name", "")
                                 ),
                                 "note_id": record.get("note_id", ""),
-                            }
-
-                # 二级评论用户
-                sub_comments = comment.get("sub_comments", [])
-                for sub_comment in sub_comments:
-                    sub_user = sub_comment.get("user", {})
-                    sub_user_id = sub_user.get("user_id") or sub_user.get("id")
-                    if sub_user_id:
-                        commenter_ids.add(sub_user_id)
-                        if sub_user_id not in commenter_details:
-                            commenter_details[sub_user_id] = {
-                                "user_id": sub_user_id,
-                                "nickname": sub_user.get(
-                                    "nickname", sub_user.get("nick_name", "")
-                                ),
-                                "note_id": record.get("note_id", ""),
+                                "xsec_token": sub_user.get("xsec_token", ""),
                             }
 
         except Exception as e:
@@ -162,14 +150,21 @@ def save_commenter_ids(
         f.write(f"# 总数量: {len(commenter_ids)}\n")
         f.write("#" + "=" * 50 + "\n\n")
 
+        # 表头
+        f.write("# 格式: 用户ID\t昵称\t主页链接\n")
+        f.write("#" + "-" * 50 + "\n\n")
+
         if details:
             for user_id in sorted(commenter_ids):
                 info = details.get(user_id, {})
                 nickname = info.get("nickname", "N/A")
-                f.write(f"{user_id}\t{nickname}\n")
+                # 生成用户主页链接
+                profile_url = user_url(user_id)
+                f.write(f"{user_id}\t{nickname}\t{profile_url}\n")
         else:
             for user_id in sorted(commenter_ids):
-                f.write(f"{user_id}\n")
+                profile_url = user_url(user_id)
+                f.write(f"{user_id}\tN/A\t{profile_url}\n")
 
     return output_path
 

@@ -1,39 +1,25 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
-# 基础响应模型
 class BaseResponse(BaseModel):
     success: bool = Field(..., description="操作是否成功")
     message: str = Field(..., description="返回消息")
     data: Optional[Any] = Field(None, description="返回数据")
 
-# Cookie相关模型
-class CookieRequest(BaseModel):
-    cookie: str = Field(..., description="小红书Cookie")
-    key: Optional[str] = Field("default", description="Cookie标识，默认为default")
-
-class CookieResponse(BaseModel):
-    key: str = Field(..., description="Cookie标识")
-    cookie: str = Field(..., description="小红书Cookie")
-
-# 笔记爬取相关模型
 class NoteRequest(BaseModel):
     note_url: str = Field(..., description="笔记链接")
-    cookie_key: Optional[str] = Field("default", description="使用的Cookie标识")
     proxies: Optional[Dict[str, str]] = Field(None, description="代理配置")
 
 class BatchNoteRequest(BaseModel):
     notes: List[str] = Field(..., description="笔记链接列表")
     save_choice: str = Field(default="all", description="保存选项: all, media, excel")
     excel_name: Optional[str] = Field(None, description="Excel文件名")
-    cookie_key: Optional[str] = Field("default", description="使用的Cookie标识")
     proxies: Optional[Dict[str, str]] = Field(None, description="代理配置")
 
 class UserNoteRequest(BaseModel):
     user_url: str = Field(..., description="用户主页链接")
     save_choice: str = Field(default="all", description="保存选项: all, media, excel")
     excel_name: Optional[str] = Field(None, description="Excel文件名")
-    cookie_key: Optional[str] = Field("default", description="使用的Cookie标识")
     proxies: Optional[Dict[str, str]] = Field(None, description="代理配置")
 
 class SearchRequest(BaseModel):
@@ -47,10 +33,8 @@ class SearchRequest(BaseModel):
     pos_distance: int = Field(default=0, description="位置距离: 0不限, 1同城, 2附近")
     geo: Optional[Dict[str, float]] = Field(None, description="地理位置: {latitude: 纬度, longitude: 经度}")
     excel_name: Optional[str] = Field(None, description="Excel文件名")
-    cookie_key: Optional[str] = Field("default", description="使用的Cookie标识")
     proxies: Optional[Dict[str, str]] = Field(None, description="代理配置")
 
-# 结果响应模型
 class NoteResponse(BaseResponse):
     data: Optional[Dict[str, Any]] = Field(None, description="笔记数据")
 
@@ -58,4 +42,4 @@ class BatchNoteResponse(BaseResponse):
     data: Optional[List[Dict[str, Any]]] = Field(None, description="笔记列表")
 
 class SearchResponse(BaseResponse):
-    data: Optional[List[str]] = Field(None, description="搜索结果笔记链接列表")
+    data: Optional[Dict[str, Any]] = Field(None, description="搜索结果及元数据")

@@ -131,7 +131,7 @@ def spider_search_notes(
         return f"状态: 失败\n消息: {result['message']}"
 
 # 创建Gradio界面
-with gr.Blocks(title="小红书爬虫API", theme=gr.themes.Soft()) as app:
+with gr.Blocks(title="小红书爬虫API") as app:
     # 标题和说明
     gr.Markdown("# 小红书爬虫API工具")
     gr.Markdown("## 基于FastAPI的小红书爬虫服务")

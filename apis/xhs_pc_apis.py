@@ -14,6 +14,18 @@ class XHS_Apis():
     def __init__(self):
         self.base_url = "https://edith.xiaohongshu.com"
 
+    def _check_cookie_expired(self, res_json: dict) -> tuple[bool, str]:
+        if not res_json:
+            return True, "请求失败，响应为空"
+        if res_json.get("success") is False:
+            msg = res_json.get("msg", "")
+            if msg:
+                return True, f"Cookie已过期或无效: {msg}"
+            return True, "Cookie已过期或无效"
+        if "data" not in res_json or not res_json["data"]:
+            return True, "Cookie已过期或无效，无数据返回"
+        return False, ""
+
     def get_homefeed_all_channel(self, cookies_str: str, proxies: dict = None):
         """
             获取主页的所有频道
@@ -382,6 +394,9 @@ class XHS_Apis():
             headers, cookies, data = generate_request_params(cookies_str, api, data, 'POST')
             response = requests.post(self.base_url + api, headers=headers, data=data, cookies=cookies, proxies=proxies)
             res_json = response.json()
+            expired, expire_msg = self._check_cookie_expired(res_json)
+            if expired:
+                return False, expire_msg, res_json
             success, msg = res_json["success"], res_json["msg"]
         except Exception as e:
             success = False
@@ -513,6 +528,9 @@ class XHS_Apis():
             headers, cookies, data = generate_request_params(cookies_str, api, data, 'POST')
             response = requests.post(self.base_url + api, headers=headers, data=data.encode('utf-8'), cookies=cookies, proxies=proxies)
             res_json = response.json()
+            expired, expire_msg = self._check_cookie_expired(res_json)
+            if expired:
+                return False, expire_msg, res_json
             success, msg = res_json["success"], res_json["msg"]
         except Exception as e:
             success = False

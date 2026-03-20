@@ -38,8 +38,66 @@ abRequestId=b13ea894-d51c-5b1f-ae2f-6aaf83c90e25; webBuild=6.1.2; xsecappid=xhs-
 | `id_token` | 身份认证 token |
 | `unread` | 未读消息数统计 |
 
+## 核心 Cookie 参数生成机制
+
+小红书 Web 端 API 的 cookie 实际需要 **4 个核心参数**：
+
+| 参数 | 获取方式 |
+|------|----------|
+| `xhsTrackerId` | 请求小红书主页时从 Set-Cookie 中获取 |
+| `extra_exp_ids` | 请求小红书主页时从 Set-Cookie 中获取 |
+| `timestamp2` | 需 POST 请求 `/fe_api/burdock/v2/shield/registerCanvas?p=cc` 获取 |
+| `timestamp2.sig` | 需 POST 请求 `/fe_api/burdock/v2/shield/registerCanvas?p=cc` 获取 |
+
+### 生成流程
+
+1. **第一步**：请求 `https://www.xiaohongshu.com` 获取 `xhsTrackerId` 和 `extra_exp_ids`
+2. **第二步**：携带第一步获取的 cookie，POST 请求以下接口获取 `timestamp2` 和 `timestamp2.sig`
+
+```
+POST https://www.xiaohongshu.com/fe_api/burdock/v2/shield/registerCanvas?p=cc
+```
+
+请求 data 参数：
+```python
+{
+    'id': '<xhsTrackerId值>',
+    'sign': '<浏览器UA及指纹信息拼接的签名>'
+}
+```
+
+### Python 示例代码
+
+```python
+def get_xhs_cookie(proxies=None):
+    url = 'https://www.xiaohongshu.com'
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...',
+    }
+    xhs_cookie = ''
+    res = requests.get(url, headers=headers, verify=False, proxies=proxies, timeout=10)
+    cookies = res.headers['Set-Cookie'].split(';')
+    for cookie in cookies:
+        if 'xhsTrackerId' in cookie or 'extra_exp_ids' in cookie:
+            xhs_cookie += cookie + ';'
+
+    url = 'https://www.xiaohongshu.com/fe_api/burdock/v2/shield/registerCanvas?p=cc'
+    headers = {
+        'Cookie': xhs_cookie,
+        'User-Agent': headers['user-agent'],
+    }
+    data = {
+        'id': '<xhsTrackerId>',
+        'sign': '<UA及指纹签名>'
+    }
+    res = requests.post(url, headers=headers, data=data, verify=False, proxies=proxies, timeout=10)
+    # 从响应中解析 timestamp2 和 timestamp2.sig
+    return xhs_cookie
+```
+
 ## 注意事项
 
 - Cookie 具有时效性，过期后需重新获取
 - 请勿将 cookie 泄露给他人
 - 建议定期更换 cookie 以保证正常使用
+- 频繁请求可能触发滑块验证，建议使用代理

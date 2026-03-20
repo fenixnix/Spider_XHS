@@ -28,7 +28,7 @@ class Data_Spider():
                 note_info = handle_note_info(note_info)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'爬取笔记信息 {note_url}: {success}, msg: {msg}')
         return success, msg, note_info
 
@@ -39,6 +39,7 @@ class Data_Spider():
         note_list = []
         for note_url in notes:
             success, msg, note_info = self.spider_note(note_url, cookies, proxies)
+            print("MSG:",msg)
             if note_info is not None and success:
                 note_list.append(note_info)
         for note_info in note_list:
@@ -63,7 +64,7 @@ class Data_Spider():
             self.spider_some_note(note_list, cookies, base_path, save_choice, excel_name, proxies)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'爬取用户所有视频 {user_url}: {success}, msg: {msg}')
         return note_list, success, msg
 
@@ -72,6 +73,8 @@ class Data_Spider():
         note_list = []
         try:
             success, msg, notes = self.xhs_apis.search_some_note(query, require_num, cookies, sort_type_choice, note_type, note_time, note_range, pos_distance, geo, proxies)
+            print("MSG:")
+            print(msg)
             if success:
                 notes = list(filter(lambda x: x['model_type'] == "note", notes))
                 logger.info(f'搜索关键词 {query} 笔记数量: {len(notes)}')
@@ -83,6 +86,6 @@ class Data_Spider():
             self.spider_some_note(note_list, cookies, base_path, save_choice, excel_name, proxies)
         except Exception as e:
             success = False
-            msg = e
+            msg = str(e)
         logger.info(f'搜索关键词 {query} 笔记: {success}, msg: {msg}')
         return note_list, success, msg
